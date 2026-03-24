@@ -1,0 +1,7 @@
+/* File: src/styles/index.css */
+
+/* Tạm thời tắt dòng này đi vì chúng ta chưa tạo file fonts.css */
+/* @import './fonts.css'; */ 
+
+@import './tailwind.css';
+@import './theme.css';
