@@ -1,71 +1,78 @@
 import React from 'react';
-import { Outlet, Link, useLocation, Navigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LayoutDashboard, FileText, Users, FolderOpen, LogOut, ChevronLeft } from 'lucide-react';
 
 export default function AdminLayout() {
   const { user, logout } = useAuth();
-  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Kiểm tra quyền truy cập nhanh (RBAC)
-  if (!user || (user.role === 'reader')) return <Navigate to="/" />;
-
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Thống kê', path: '/dashboard', roles: ['admin'] },
-    { icon: FileText, label: 'Bài viết', path: '/dashboard/posts', roles: ['admin', 'author', 'editor'] },
-    { icon: FolderOpen, label: 'Danh mục', path: '/dashboard/categories', roles: ['admin', 'editor'] },
-    { icon: Users, label: 'Người dùng', path: '/dashboard/users', roles: ['admin'] },
-  ];
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
-    <div className="flex h-screen bg-muted/30">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r flex flex-col">
-        <div className="p-6 border-b flex items-center justify-between">
-          <span className="font-serif font-bold text-xl">Mini CMS</span>
-          <Link to="/" title="Về trang chủ"><ChevronLeft className="w-5 h-5"/></Link>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f4f6f9' }}>
+      
+      {/* --- SIDEBAR (THANH MENU BÊN TRÁI) --- */}
+      <aside style={{ width: '250px', backgroundColor: '#343a40', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '20px', textAlign: 'center', borderBottom: '1px solid #4f5962' }}>
+          <h2 style={{ margin: 0, fontSize: '20px', color: '#fff' }}>Hệ Thống CMS</h2>
+          <p style={{ margin: '5px 0 0 0', fontSize: '14px', color: '#adb5bd' }}>
+            Vai trò: <span style={{ textTransform: 'uppercase', color: '#ffc107', fontWeight: 'bold' }}>{user?.role}</span>
+          </p>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => (
-            item.roles.includes(user.role) && (
-              <Link
-                key={item.path} to={item.path}
-                className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                  location.pathname === item.path ? 'bg-primary text-white' : 'hover:bg-muted'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </Link>
-            )
-          ))}
+
+        <nav style={{ flex: 1, padding: '20px 0', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <Link to="/dashboard/posts" style={navItemStyle}>📝 Quản lý bài viết</Link>
+          
+          {/* Chỉ Admin hoặc Editor mới thấy Quản lý Danh mục & Thẻ */}
+          {['admin', 'editor'].includes(user?.role) && (
+            <>
+              <Link to="/dashboard/categories" style={navItemStyle}>📁 Quản lý Danh mục</Link>
+              <Link to="/dashboard/tags" style={navItemStyle}>🏷️ Quản lý Thẻ (Tags)</Link>
+            </>
+          )}
+
+          {/* Chỉ Admin mới thấy Quản lý User */}
+          {user?.role === 'admin' && (
+            <Link to="/dashboard/users" style={navItemStyle}>👥 Quản lý Người dùng</Link>
+          )}
+
+          <Link to="/profile" style={navItemStyle}>👤 Hồ sơ của tôi</Link>
         </nav>
-        <div className="p-4 border-t">
-          <button onClick={logout} className="flex items-center gap-3 px-4 py-2 w-full text-red-500 hover:bg-red-50 rounded-lg">
-            <LogOut className="w-5 h-5" />
-            <span>Đăng xuất</span>
+
+        <div style={{ padding: '20px', borderTop: '1px solid #4f5962' }}>
+          <Link to="/" style={{ ...navItemStyle, color: '#17a2b8', marginBottom: '10px' }}>🌍 Ra ngoài Trang chủ</Link>
+          <button onClick={handleLogout} style={{ width: '100%', padding: '10px', backgroundColor: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            Đăng xuất
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-card border-b flex items-center justify-between px-8">
-          <div className="font-medium">Dashboard / {user.role}</div>
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-sm font-bold">{user.name}</div>
-              <div className="text-xs text-muted-foreground uppercase">{user.role}</div>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-              {user.name.charAt(0)}
-            </div>
-          </div>
+      {/* --- MAIN CONTENT (NỘI DUNG CHÍNH BÊN PHẢI) --- */}
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        {/* Topbar nhỏ bên trên */}
+        <header style={{ backgroundColor: '#fff', padding: '15px 30px', borderBottom: '1px solid #ddd', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <span style={{ fontWeight: 'bold', color: '#333' }}>Xin chào, {user?.username || 'Bạn'}! 👋</span>
         </header>
-        <main className="flex-1 overflow-y-auto p-8">
-          <Outlet />
-        </main>
-      </div>
+
+        {/* Khu vực render nội dung các trang con (PostList, CreatePost...) */}
+        <div style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
+          <Outlet /> {/* <-- ĐÂY LÀ PHÉP THUẬT CỦA REACT ROUTER */}
+        </div>
+      </main>
+
     </div>
   );
 }
+
+// Style tái sử dụng cho các link trong menu
+const navItemStyle = {
+  display: 'block',
+  padding: '12px 20px',
+  color: '#c2c7d0',
+  textDecoration: 'none',
+  fontSize: '16px',
+  transition: 'background 0.3s',
+};

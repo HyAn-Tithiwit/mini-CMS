@@ -1,72 +1,93 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { authApi } from "../../api/auth.api";
+import React, { useState } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token"); // Lấy token từ URL
+  const token = searchParams.get('token'); // Lấy mã token từ đường dẫn URL
+  const navigate = useNavigate();
 
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!token) return setError("Token không hợp lệ hoặc bị thiếu!");
-    
-    setLoading(true);
-    setError("");
-    setMessage("");
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Mật khẩu xác nhận không khớp!');
+      return;
+    }
+
+    setIsLoading(true);
 
     try {
-      const res = await authApi.resetPassword({ token, password });
-      setMessage(res.data.message || "Đổi mật khẩu thành công!");
-    } catch (err) {
-      setError(err.response?.data?.message || "Token đã hết hạn hoặc không đúng.");
-    } finally {
-      setLoading(false);
+      // TẠM THỜI GIẢ LẬP GỌI API (Chờ Backend làm api reset)
+      // await authApi.resetPassword({ token, newPassword: password });
+      
+      setTimeout(() => {
+        alert('Cập nhật mật khẩu thành công! Vui lòng đăng nhập lại.');
+        navigate('/login');
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setError('Đường dẫn không hợp lệ hoặc đã hết hạn.');
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Đặt lại mật khẩu</h2>
-        
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
-        {message && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm">{message}</div>}
-
-        {!message ? (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Mật khẩu mới</label>
-              <input
-                type="password"
-                required
-                minLength="6"
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition"
-            >
-              {loading ? "Đang xử lý..." : "Lưu mật khẩu mới"}
-            </button>
-          </form>
-        ) : (
-          <div className="mt-6 text-center">
-            <Link to="/login" className="inline-block py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
-              Đến trang đăng nhập
-            </Link>
-          </div>
-        )}
+  // Nếu người dùng vô tình vào thẳng trang này mà không có token từ email
+  if (!token) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <h2 style={{ color: 'red' }}>Đường dẫn không hợp lệ</h2>
+        <p>Vui lòng kiểm tra lại email hoặc yêu cầu gửi lại link khôi phục.</p>
+        <Link to="/forgot-password">Yêu cầu cấp lại link</Link>
       </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: '400px', margin: '60px auto', padding: '30px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '20px', color: '#333' }}>Tạo Mật Khẩu Mới</h2>
+      
+      {error && <div style={{ color: 'red', backgroundColor: '#f8d7da', padding: '10px', borderRadius: '4px', marginBottom: '15px', fontSize: '14px' }}>{error}</div>}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Mật khẩu mới:</label>
+          <input 
+            type="password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            placeholder="Nhập ít nhất 6 ký tự..."
+            style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '25px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Xác nhận mật khẩu:</label>
+          <input 
+            type="password" 
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            placeholder="Nhập lại mật khẩu mới..."
+            style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          disabled={isLoading || !password || !confirmPassword}
+          style={{ width: '100%', padding: '12px', backgroundColor: isLoading ? '#6c757d' : '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+        >
+          {isLoading ? 'Đang lưu...' : 'Lưu Mật Khẩu Mới'}
+        </button>
+      </form>
     </div>
   );
 }

@@ -1,66 +1,71 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { authApi } from "../../api/auth.api";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setError("");
-    setLoading(true);
+    setIsLoading(true);
+    setMessage('');
 
     try {
-      const res = await authApi.forgotPassword({ email });
-      setMessage(res.data.message || "Link khôi phục đã được gửi vào email của bạn.");
-    } catch (err) {
-      setError(err.response?.data?.message || "Có lỗi xảy ra. Vui lòng thử lại.");
-    } finally {
-      setLoading(false);
+      // TẠM THỜI GIẢ LẬP GỌI API (Chờ Backend làm api gửi mail)
+      // await authApi.forgotPassword(email);
+      
+      setTimeout(() => {
+        setMessage('✅ Nếu email hợp lệ, một liên kết đặt lại mật khẩu đã được gửi đến hộp thư của bạn. Vui lòng kiểm tra!');
+        setIsLoading(false);
+      }, 1500);
+
+    } catch (error) {
+      console.error(error);
+      setMessage('❌ Có lỗi xảy ra, vui lòng thử lại sau.');
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">Quên mật khẩu?</h2>
-        <p className="text-sm text-gray-600 text-center mb-6">
-          Nhập email của bạn và chúng tôi sẽ gửi link để đặt lại mật khẩu.
-        </p>
+    <div style={{ maxWidth: '400px', margin: '60px auto', padding: '30px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <h2 style={{ textAlign: 'center', marginBottom: '10px', color: '#333' }}>Quên Mật Khẩu?</h2>
+      <p style={{ textAlign: 'center', color: '#666', marginBottom: '25px', fontSize: '14px' }}>
+        Đừng lo lắng! Nhập email của bạn và chúng tôi sẽ gửi hướng dẫn khôi phục tài khoản.
+      </p>
 
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
-        {message && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg text-sm">{message}</div>}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition"
-          >
-            {loading ? "Đang gửi..." : "Gửi yêu cầu"}
-          </button>
-        </form>
-
-        <div className="mt-6 text-center">
-          <Link to="/login" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-            Quay lại đăng nhập
-          </Link>
+      {message && (
+        <div style={{ padding: '10px', marginBottom: '20px', borderRadius: '4px', backgroundColor: message.includes('✅') ? '#d4edda' : '#f8d7da', color: message.includes('✅') ? '#155724' : '#721c24', fontSize: '14px' }}>
+          {message}
         </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Địa chỉ Email:</label>
+          <input 
+            type="email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="Nhập email đã đăng ký..."
+            style={{ width: '100%', padding: '12px', borderRadius: '4px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <button 
+          type="submit" 
+          disabled={isLoading || !email}
+          style={{ width: '100%', padding: '12px', backgroundColor: isLoading ? '#6c757d' : '#007BFF', color: '#fff', border: 'none', borderRadius: '4px', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 'bold' }}
+        >
+          {isLoading ? 'Đang gửi yêu cầu...' : 'Gửi Link Khôi Phục'}
+        </button>
+      </form>
+
+      <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
+        <Link to="/login" style={{ color: '#007BFF', textDecoration: 'none', fontWeight: 'bold' }}>
+          ← Quay lại Đăng nhập
+        </Link>
       </div>
     </div>
   );

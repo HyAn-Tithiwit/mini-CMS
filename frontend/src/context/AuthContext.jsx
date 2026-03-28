@@ -1,39 +1,71 @@
-/* eslint-disable react-refresh/only-export-components */
-import { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import { authApi } from '../api/auth.api';
 
-export const AuthContext = createContext();
+// 1. Tạo Context
+const AuthContext = createContext();
 
+// 2. Tạo Provider để bọc toàn bộ App
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return !!localStorage.getItem("accessToken");
-  });
+  const [user, setUser] = useState(null); // Lưu thông tin user
+  const [loading, setLoading] = useState(true); // Trạng thái chờ load dữ liệu lúc mới vào web
 
-  const loginContext = (tokens) => {
-    localStorage.setItem("accessToken", tokens.accessToken);
-    if(tokens.refreshToken) {
-        localStorage.setItem("refreshToken", tokens.refreshToken);
+  // Chạy 1 lần duy nhất khi user vừa mở web
+  useEffect(() => {
+    const checkUserLoggedIn = async () => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        try {
+          // Nếu có token, gọi API lấy thông tin user để biết họ là ai (Admin, Reader, v.v.)
+          const userInfo = await authApi.getUserInfo();
+          setUser(userInfo.data); // Giả sử backend trả về { data: { id, name, role... } }
+        } catch (error) {
+          console.error('Token hết hạn hoặc lỗi:', error);
+          localStorage.removeItem('accessToken');
+          setUser(null);
+        }
+      }
+      setLoading(false); // Xong bước kiểm tra thì tắt loading
+    };
+
+    checkUserLoggedIn();
+  }, []);
+
+  // Hàm Đăng nhập (để dùng ở file Login.jsx)
+  const login = async (email, password, roleType = 'reader') => {
+    // roleType để phân biệt loginAdmin hay loginReader dựa vào backend của bạn
+    let response;
+    if (roleType === 'admin') {
+      response = await authApi.loginAdmin({ email, password });
+    } else {
+      response = await authApi.loginReader({ email, password });
     }
-    setIsAuthenticated(true);
+    
+    // Lưu token và set lại User
+    localStorage.setItem('accessToken', response.token); // Đổi 'response.token' tuỳ data backend trả về
+    setUser(response.user); 
+    return response;
   };
 
-  const logoutContext = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    setIsAuthenticated(false);
+  // Hàm Đăng xuất (để dùng ở Header.jsx)
+  const logout = async () => {
+    try {
+      await authApi.logout(); // Báo cho backend biết
+    } catch (error) {
+      console.error(error);
+    } finally {
+      localStorage.removeItem('accessToken');
+      setUser(null);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loginContext, logoutContext }}>
-      {children}
+    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
+      {!loading && children} 
+      {/* Chỉ render các trang khi đã kiểm tra xong user */}
     </AuthContext.Provider>
   );
 };
 
-// Thêm custom hook useAuth ở đây để sửa lỗi
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-};
+// 3. Tạo Hook Custom để các component khác gọi cho lẹ
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAuth = () => useContext(AuthContext);
