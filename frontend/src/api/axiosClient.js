@@ -1,16 +1,17 @@
 import axios from 'axios';
 
-// 1. Khởi tạo instance cơ bản
+// Dùng URL từ .env, nếu không có thì mặc định port 3000
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const axiosClient = axios.create({
-  // Sử dụng biến môi trường của Vite thay vì gõ cứng URL
-  baseURL: import.meta.env.VITE_API_URL, 
+  baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
 
-// 2. Interceptor GỬI ĐI: Tự động nhét Access Token vào header
+// Tự động đính kèm Token trước khi gửi
 axiosClient.interceptors.request.use(
   (config) => {
     const accessToken = localStorage.getItem('accessToken');
@@ -22,33 +23,41 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 3. Interceptor NHẬN VỀ: Xử lý lỗi Token hết hạn (401)
+// Bắt lỗi khi nhận response
 axiosClient.interceptors.response.use(
   (response) => {
-    // Nếu request thành công, chỉ lấy data (bỏ qua các thông tin config lằng nhằng của axios)
     return response.data;
   },
   async (error) => {
     const originalRequest = error.config;
     
-    // Nếu lỗi 401 (Hết hạn token) và chưa thử refresh lại token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // SỬA Ở ĐÂY: Bỏ qua không xin lại token nếu đang ở API /auth/login
+    if (error.response?.status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/login') {
       originalRequest._retry = true;
+      
       try {
-        // Gọi API refresh token của bạn
-        const res = await axiosClient.post('/auth/refresh-new-token');
-        const newAccessToken = res.data.accessToken; // Tùy format backend trả về
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) throw new Error("Không có refresh token");
+
+        // Dùng axios gốc để không bị kẹt vào vòng lặp
+        const res = await axios.post(`${BASE_URL}/auth/refresh-token`, { 
+          refreshToken: refreshToken 
+        });
         
-        // Lưu token mới
+        const newAccessToken = res.data.accessToken; 
         localStorage.setItem('accessToken', newAccessToken);
         
-        // Sửa lại header và thử gọi lại API bị lỗi ban nãy
         originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
         return axiosClient(originalRequest);
+        
       } catch (refreshError) {
-        // Nếu refresh token cũng hết hạn -> Bắt user đăng nhập lại
         localStorage.removeItem('accessToken');
-        window.location.href = '/login';
+        localStorage.removeItem('refreshToken');
+        
+        // Chỉ reload trang nếu user không phải đang ở sẵn trang login
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+        }
         return Promise.reject(refreshError);
       }
     }

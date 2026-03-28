@@ -3,17 +3,20 @@ import axiosClient from './axiosClient';
 export const authApi = {
   // --- AUTHENTICATION ---
   register: (data) => axiosClient.post('/auth/register', data),
-  loginAdmin: (data) => axiosClient.post('/auth/login/admin', data),
-  loginReader: (data) => axiosClient.post('/auth/login/reader', data),
-  logout: () => axiosClient.post('/auth/logout'),
+  login: (data) => axiosClient.post('/auth/login', data), 
+  refreshToken: (data) => axiosClient.post('/auth/refresh-token', data),
+  logout: (data) => axiosClient.post('/auth/logout', data),
   
-  // --- USER PROFILE ---
-  getUserInfo: () => axiosClient.get('/users/get-user-info'),
-  upgradeToAuthor: () => axiosClient.put('/users/update-role-to-author'),
+  forgotPassword: (data) => axiosClient.post('/auth/forgot-password', data),
+  resetPassword: (data) => axiosClient.post('/auth/reset-password', data),
   
-  // --- ADMIN ROLE (Quản lý User) ---
-  getAllUsers: () => axiosClient.get('/users/get-all-user'),
-  getUserById: (id) => axiosClient.get(`/users/get-user-byID/${id}`),
-  updateUserStatus: (id, statusData) => axiosClient.patch(`/users/update-status-byID/${id}`, statusData),
-  deleteUser: (id) => axiosClient.delete(`/users/delete-user-by/${id}`),
+  // --- USER PROFILE (Khớp với file route của Backend) ---
+  getUserInfo: () => axiosClient.get('/user/get-user-info'), 
+  
+  // --- ADMIN ROLE ---
+  getAllUsers: () => axiosClient.get('/admin/users'),
+  getUserById: (id) => axiosClient.get(`/admin/users/${id}`),
+  updateUserStatus: (id, statusData) => axiosClient.patch(`/admin/users/${id}/status`, statusData),
+  updateUserRole: (id, roleData) => axiosClient.patch(`/admin/users/${id}/role`, roleData),
+  deleteUser: (id) => axiosClient.delete(`/admin/users/${id}`),
 };

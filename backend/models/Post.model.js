@@ -7,9 +7,12 @@ const postSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
-        content: {
+        content_markdown: {
             type: String,
             required: true,
+        },
+        content_html: {
+            type: String
         },
         slug: {
             type: String,

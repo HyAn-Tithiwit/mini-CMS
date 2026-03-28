@@ -1,59 +1,68 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { authApi } from '../api/auth.api';
 
-// 1. Tạo Context
 const AuthContext = createContext();
 
-// 2. Tạo Provider để bọc toàn bộ App
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Lưu thông tin user
-  const [loading, setLoading] = useState(true); // Trạng thái chờ load dữ liệu lúc mới vào web
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Chạy 1 lần duy nhất khi user vừa mở web
+  // F5 load lại trang -> Kiểm tra xem còn token không
   useEffect(() => {
     const checkUserLoggedIn = async () => {
       const token = localStorage.getItem('accessToken');
       if (token) {
         try {
-          // Nếu có token, gọi API lấy thông tin user để biết họ là ai (Admin, Reader, v.v.)
-          const userInfo = await authApi.getUserInfo();
-          setUser(userInfo.data); // Giả sử backend trả về { data: { id, name, role... } }
+          // Dùng token hiện tại để lấy thông tin user
+          const response = await authApi.getUserInfo();
+          setUser(response.data || response.user || response); 
         } catch (error) {
-          console.error('Token hết hạn hoặc lỗi:', error);
+          console.error('Lỗi hoặc Token hết hạn:', error);
           localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
           setUser(null);
         }
       }
-      setLoading(false); // Xong bước kiểm tra thì tắt loading
+      setLoading(false);
     };
-
     checkUserLoggedIn();
   }, []);
 
-  // Hàm Đăng nhập (để dùng ở file Login.jsx)
-  const login = async (email, password, roleType = 'reader') => {
-    // roleType để phân biệt loginAdmin hay loginReader dựa vào backend của bạn
-    let response;
-    if (roleType === 'admin') {
-      response = await authApi.loginAdmin({ email, password });
-    } else {
-      response = await authApi.loginReader({ email, password });
-    }
+  // HÀM ĐĂNG NHẬP 2 BƯỚC
+  const login = async (email, password) => {
+    // Bước 1: Gửi email/pass lấy tokens từ Backend
+    const tokenResponse = await authApi.login({ email, password });
     
-    // Lưu token và set lại User
-    localStorage.setItem('accessToken', response.token); // Đổi 'response.token' tuỳ data backend trả về
-    setUser(response.user); 
-    return response;
+    // Lưu tokens vào localStorage ngay lập tức để axiosClient tự động đính kèm vào header
+    localStorage.setItem('accessToken', tokenResponse.accessToken);
+    if (tokenResponse.refreshToken) {
+      localStorage.setItem('refreshToken', tokenResponse.refreshToken);
+    }
+
+    // Bước 2: Gọi API lấy profile để biết User này là ai (Role gì)
+    const userInfoResponse = await authApi.getUserInfo();
+    const userData = userInfoResponse.data || userInfoResponse.user || userInfoResponse;
+
+    // Lưu vào state
+    setUser(userData); 
+    
+    // Trả về userData cho giao diện Login xử lý chuyển hướng
+    return userData; 
   };
 
-  // Hàm Đăng xuất (để dùng ở Header.jsx)
+  // HÀM ĐĂNG XUẤT
   const logout = async () => {
     try {
-      await authApi.logout(); // Báo cho backend biết
+      const refreshToken = localStorage.getItem('refreshToken');
+      // Backend của bạn yêu cầu truyền refreshToken vào body
+      if (refreshToken) {
+        await authApi.logout({ refreshToken }); 
+      }
     } catch (error) {
-      console.error(error);
+      console.error('Lỗi khi đăng xuất:', error);
     } finally {
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       setUser(null);
     }
   };
@@ -61,11 +70,16 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
       {!loading && children} 
-      {/* Chỉ render các trang khi đã kiểm tra xong user */}
     </AuthContext.Provider>
   );
 };
 
-// 3. Tạo Hook Custom để các component khác gọi cho lẹ
+// Hook tuỳ chỉnh
 // eslint-disable-next-line react-refresh/only-export-components
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth phải được dùng trong AuthProvider");
+  }
+  return context;
+};

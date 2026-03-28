@@ -2,8 +2,7 @@ const Post = require("../models/Post.model");
 const Category = require("../models/Category.model");
 const Tag = require("../models/Tag.model");
 const GenerateSlug = require("../utils/generate-slug");
-
-
+const { processContent } = require("../utils/handle-content");
 
 // Lấy tất cả bài posts
 exports.getPosts = async (req, res) => {
@@ -174,17 +173,20 @@ exports.createPost = async (req, res) => {
             })
         }
 
+        const cleanHtml = processContent(content);
+
         const imageurl = req.file ? req.file.path : null;
 
-        if(!title && !content && !author) {
+        if(!title || !content || !author) {
             res.status(400).json({
-                message: "Doesn't have any data to create"
+                message: "Doesn't enough data to create post"
             });
         }
 
         const post = await Post.create({
             title,
-            content,
+            content_markdown: content,
+            content_html: cleanHtml,
             slug,
             category,
             tags,
