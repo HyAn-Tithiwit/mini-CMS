@@ -30,16 +30,23 @@ export default function Header() {
             <Link to="/register" style={{ textDecoration: 'none', color: '#28a745' }}>Đăng ký</Link>
           </>
         ) : (
-          /* Nếu ĐÃ đăng nhập -> Hiện Tên user và nút Đăng xuất */
+          /* Nếu ĐÃ đăng nhập -> Hiện Tên user, nút Profile và nút Đăng xuất */
           <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-            <span style={{ fontWeight: 'bold' }}>Chào, {user.username}</span>
+            <span style={{ fontWeight: 'bold', color: '#333' }}>Chào, {user.username}</span>
             
+            {/* ---> ĐÃ BỔ SUNG NÚT PROFILE VÀO ĐÂY <--- */}
+            <Link to="/profile" style={{ textDecoration: 'none', color: '#28a745', fontWeight: '500' }}>
+              👤 Hồ sơ
+            </Link>
+
             {/* Nếu là Admin, Editor, Author thì cho hiện link vào Dashboard */}
             {['admin', 'editor', 'author'].includes(user.role) && (
-              <Link to="/dashboard/posts" style={{ textDecoration: 'none', color: '#17a2b8' }}>Vào Dashboard</Link>
+              <Link to="/dashboard/posts" style={{ textDecoration: 'none', color: '#17a2b8', fontWeight: '500' }}>
+                ⚙️ Dashboard
+              </Link>
             )}
 
-            <button onClick={handleLogout} style={{ padding: '5px 10px', cursor: 'pointer', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}>
+            <button onClick={handleLogout} style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold' }}>
               Đăng xuất
             </button>
           </div>

@@ -11,7 +11,8 @@ export const authApi = {
   resetPassword: (data) => axiosClient.post('/auth/reset-password', data),
   
   // --- USER PROFILE (Khớp với file route của Backend) ---
-  getUserInfo: () => axiosClient.get('/user/get-user-info'), 
+  getUserInfo: () => axiosClient.get('/user/me'), 
+  upgradeToAuthor: () => axiosClient.put('/user/me/author'),
   
   // --- ADMIN ROLE ---
   getAllUsers: () => axiosClient.get('/admin/users'),
