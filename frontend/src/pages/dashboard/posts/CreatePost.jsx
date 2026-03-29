@@ -16,6 +16,7 @@ export default function CreatePost() {
     summary: '',
     content: '',
     category: '', 
+    author: '',
     tags: []
   });
   
@@ -62,6 +63,7 @@ export default function CreatePost() {
             summary: postData.summary || '',
             content: markdownContent || '', 
             category: postData.category?._id || postData.category || '',
+            author: postData.author || '',
             tags: postData.tags?.map(t => t._id || t) || [] 
           });
           setImagePreview(postData.image || postData.thumbnail || '');
@@ -107,6 +109,7 @@ export default function CreatePost() {
     e.preventDefault();
 
     if (!formData.title.trim()) return alert("Vui lòng nhập tiêu đề bài viết!");
+    if (!formData.author.trim()) return alert("Vui lòng nhập tên tác giả!");
     if (!formData.content.trim()) return alert("Vui lòng nhập nội dung chi tiết!");
     if (!formData.category) return alert("Vui lòng chọn danh mục (Category)!");
 
@@ -122,6 +125,7 @@ export default function CreatePost() {
       const submitData = new FormData();
       
       submitData.append('title', formData.title);
+      submitData.append('author', formData.author);
       submitData.append('summary', formData.summary);
       submitData.append('content', formData.content);
       submitData.append('category', formData.category);
@@ -177,6 +181,21 @@ export default function CreatePost() {
           <input 
             type="text" name="title" value={formData.title} onChange={handleChange} required 
             placeholder="Nhập tiêu đề hấp dẫn..."
+            style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>
+            Tên tác giả <span style={{color: 'red'}}>*</span>
+          </label>
+          <input 
+            type="text" 
+            name="author" 
+            value={formData.author} 
+            onChange={handleChange} 
+            required 
+            placeholder="Nhập tên người viết..."
             style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
           />
         </div>

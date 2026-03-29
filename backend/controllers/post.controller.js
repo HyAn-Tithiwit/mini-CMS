@@ -60,7 +60,7 @@ exports.getPosts = async (req, res) => {
 // Đọc chi tiết bài post
 exports.getDetailPost = async (req, res) => {
     try {
-        const detailPost = await Post.findById(req.params.id).select("title content slug category tags image author publishdate");
+        const detailPost = await Post.findById(req.params.id).select("title summary content_html slug status category tags image author publishdate").populate("category", "name");
         return res.status(200).json({
             message: "Successfully to get content",
             data: detailPost
@@ -212,7 +212,7 @@ exports.createPost = async (req, res) => {
 exports.updatePost = async (req, res) => {
     try {
         const { id } = req.params;
-        let { title, content, category, tags, author } = req.body;
+        let { title, summary, content, category, tags, author } = req.body;
         let image;
         let slug;
 
@@ -226,9 +226,13 @@ exports.updatePost = async (req, res) => {
             }
         }
 
+        const cleanHtml = processContent(content);
+
         const updateData = {
             title,
-            content,
+            summary,
+            content_markdown: content,
+            content_html: cleanHtml,
             category,
             tags,
             author

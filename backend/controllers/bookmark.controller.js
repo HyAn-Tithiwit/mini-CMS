@@ -1,4 +1,6 @@
 const Bookmark = require("../models/Bookmark.model");
+const Post = require("../models/Post.model");
+const User = require("../models/User.model");
 
 exports.getAllBookmark = async (req, res) => {
     try {
@@ -10,7 +12,15 @@ exports.getAllBookmark = async (req, res) => {
             });
         }
 
-        const bookmarks = await Bookmark.find({ user: userid });
+        const bookmarks = await Bookmark.find({ user: userid })
+            .populate({
+                path: "post",
+                select: "title image author category",
+                populate: {
+                    path: "category",
+                    select: "name"
+                }
+            });
 
         return res.status(200).json({
             message: "Get your bookmarks successfully",

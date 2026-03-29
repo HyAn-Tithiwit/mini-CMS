@@ -16,9 +16,9 @@ const commentSchema = new mongoose.Schema(
             type: String,
             required: true
         },
-        isSpam: {
-            type: Boolean,
-            required: true
+        reactionCount: {
+            type: Number,
+            default: 0
         },
         createdAt: {
             type: Date,

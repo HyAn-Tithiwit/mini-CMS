@@ -1,4 +1,5 @@
 const Reaction = require("../models/Reaction.model");
+const Comment = require("../models/Comment.model");
 
 exports.createReaction = async (req, res) => {
     try {
@@ -13,6 +14,8 @@ exports.createReaction = async (req, res) => {
             comment: commentid,
             user: userid,
         });
+
+        await Comment.findByIdAndUpdate(commentid, { $inc: { reactionCount: 1 } });
 
         console.log("Reaction created");
 
@@ -48,6 +51,8 @@ exports.deleteReaction = async (req, res) => {
         user: userid,
         comment: commentid
     });
+
+    await Comment.findByIdAndUpdate(commentid, { $inc: { reactionCount: -1 } });
 
     if (!reaction) {
       return res.status(404).json({

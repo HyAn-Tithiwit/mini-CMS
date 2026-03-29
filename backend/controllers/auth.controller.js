@@ -65,12 +65,6 @@ const crypto = require("crypto");
 exports.forgotPassword = async (req, res) => {
   const user = await User.findOne({ email: req.body.email });
 
-  if (!validator.validate(email)) {
-    return res.status(400).json({
-      message: "Email must be in pattern"
-    })
-  };
-
   if (!user) return res.json({ message: "If email exists, reset link sent" });
 
   const token = crypto.randomBytes(32).toString("hex");
@@ -79,8 +73,13 @@ exports.forgotPassword = async (req, res) => {
   user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
   await user.save();
 
+  const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+
   // TODO: gửi email (link chứa token)
-  res.json({ message: "Reset password email sent" });
+  res.json({ 
+    message: "Reset password email sent",
+    data: resetLink 
+  });
 };
 
 // Reset Password

@@ -13,6 +13,7 @@ import PrivateRoute from './routes/PrivateRoute';
 import Home from './pages/public/Home';
 import CategoryPublic from './pages/public/Category'; 
 import Search from './pages/public/Search'; 
+import Bookmarks from './pages/public/Bookmarks'; // Hoặc đường dẫn tương ứng của bạn
 
 // Auth Pages & Profile
 import Login from './pages/auth/Login';
@@ -46,6 +47,9 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/search" element={<Search />} /> 
               <Route path="/post/:id" element={<ArticleDetail />} />
+              <Route path="/" element={<Home />} />
+              <Route path="/profile" element={<Profile />} /> 
+              <Route path="/bookmarks" element={<Bookmarks />} />
             </Route>
 
             {/* 2. DASHBOARD ROUTES (Private & Admin Layout) */}
