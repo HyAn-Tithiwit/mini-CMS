@@ -7,6 +7,10 @@ const postSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        summary: {
+            type: String,
+            required: true,
+        },
         content_markdown: {
             type: String,
             required: true,

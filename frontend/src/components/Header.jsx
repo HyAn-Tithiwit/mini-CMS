@@ -39,10 +39,16 @@ export default function Header() {
               👤 Hồ sơ
             </Link>
 
-            {/* Nếu là Admin, Editor, Author thì cho hiện link vào Dashboard */}
             {['admin', 'editor', 'author'].includes(user.role) && (
               <Link to="/dashboard/posts" style={{ textDecoration: 'none', color: '#17a2b8', fontWeight: '500' }}>
                 ⚙️ Dashboard
+              </Link>
+            )}
+
+            {/* BỔ SUNG: Nút Duyệt Bài chỉ xuất hiện cho Admin và Editor */}
+            {['admin', 'editor'].includes(user.role) && (
+              <Link to="/dashboard/review" style={{ textDecoration: 'none', color: '#ffc107', fontWeight: 'bold', padding: '4px 8px', border: '1px solid #ffc107', borderRadius: '4px' }}>
+                🛡️ Duyệt Bài
               </Link>
             )}
 

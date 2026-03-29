@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'; // <-- Đã thêm Outlet vào đây
+import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'; 
 import { AuthProvider } from './context/AuthContext';
 import ArticleDetail from './pages/public/ArticleDetail';
 
@@ -11,21 +11,22 @@ import PrivateRoute from './routes/PrivateRoute';
 
 // Public Pages
 import Home from './pages/public/Home';
-import CategoryPublic from './pages/public/Category'; // Đổi tên import để tránh trùng với Category của Admin
-import Search from './pages/public/Search'; // <-- THÊM IMPORT SEARCH
+import CategoryPublic from './pages/public/Category'; 
+import Search from './pages/public/Search'; 
 
 // Auth Pages & Profile
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
-import Profile from './pages/public/Profile'; // (Lưu ý: Ở các bài trước mình để Profile trong dashboard, nếu bạn để ở public thì cứ giữ nguyên nhé)
+import Profile from './pages/public/Profile'; 
 
-// Dashboard Pages (Vùng quản trị) <-- THÊM CÁC IMPORT NÀY
+// Dashboard Pages
 import PostList from './pages/dashboard/posts/PostList';
 import CreatePost from './pages/dashboard/posts/CreatePost';
 import CategoryAdmin from './pages/dashboard/Category';
 import TagAdmin from './pages/dashboard/Tag';
 import UserManagement from './pages/dashboard/UserManagement';
+import ReviewList from './pages/dashboard/posts/ReviewList';
 
 function App() {
   return (
@@ -43,37 +44,41 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/search" element={<Search />} /> {/* <-- ĐÃ CẬP NHẬT TRANG TÌM KIẾM */}
+              <Route path="/search" element={<Search />} /> 
               <Route path="/post/:id" element={<ArticleDetail />} />
             </Route>
 
             {/* 2. DASHBOARD ROUTES (Private & Admin Layout) */}
-            {/* Lưu ý: Để cú pháp <Route element={<PrivateRoute />}> hoạt động, trong file PrivateRoute.jsx bạn phải return <Outlet /> nhé */}
             <Route element={<PrivateRoute allowedRoles={['admin', 'author', 'editor']} />}>
               <Route path="/dashboard" element={<AdminLayout />}>
                 
                 {/* Trang chủ của Dashboard */}
                 <Route index element={<div className="p-10 border-2 border-dashed rounded-xl text-muted-foreground text-center">Chào mừng đến với hệ thống CMS</div>} />
                 
-                {/* Quản lý bài viết (Ai cũng vào được nếu qua được PrivateRoute bên trên) */}
-                <Route path="posts" element={<PostList />} /> {/* <-- ĐÃ CẬP NHẬT */}
-                <Route path="posts/create" element={<CreatePost />} /> {/* <-- THÊM TẠO BÀI */}
-                <Route path="posts/edit/:id" element={<CreatePost />} /> {/* <-- THÊM SỬA BÀI */}
+                {/* Khu vực của Author */}
+                <Route path="posts" element={<PostList />} /> 
+                <Route path="posts/create" element={<CreatePost />} /> 
+                <Route path="posts/edit/:id" element={<CreatePost />} /> 
                 
-                {/* Chỉ Admin và Editor mới quản lý Category & Tag */}
-                <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
-                  <Route path="categories" element={<CategoryAdmin />} /> {/* <-- ĐÃ CẬP NHẬT */}
-                  <Route path="tags" element={<TagAdmin />} /> {/* <-- ĐÃ CẬP NHẬT */}
-                </Route>
-
-                {/* Chỉ Admin mới quản lý Users */}
+                {/* Khu vực của Admin */}
                 <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                  <Route path="users" element={<UserManagement />} /> {/* <-- ĐÃ CẬP NHẬT */}
+                  <Route path="users" element={<UserManagement />} /> 
                 </Route>
 
+                {/* Khu vực dùng chung của Admin và Editor */}
+                <Route element={<PrivateRoute allowedRoles={['admin', 'editor']} />}>
+                  {/* 🎯 ĐÃ SỬA CHÍNH TẢ: Thêm chữ 's' vào cuối để khớp với Link trong Sidebar */}
+                  <Route path="categories" element={<CategoryAdmin />} /> 
+                  <Route path="tags" element={<TagAdmin />} /> 
+                </Route>
+
+                {/* Khu vực của Editor (Sửa lỗi Route review) */}
+                <Route element={<PrivateRoute allowedRoles={['editor', 'admin']} />}>
+                  <Route path="review" element={<ReviewList />} />
+                </Route>
+                
               </Route>
             </Route>
-
           </Routes>
         </div>
       </BrowserRouter>

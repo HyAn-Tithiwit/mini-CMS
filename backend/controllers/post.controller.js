@@ -163,7 +163,7 @@ exports.getPostByKeyword = async (req, res) => {
 exports.createPost = async (req, res) => {
     try {
 
-        const { title, content, category, tags, author} = req.body;
+        const { title, summary, content, category, tags, author} = req.body;
 
         let slug = await GenerateSlug.generateSlug(title);
 
@@ -185,6 +185,7 @@ exports.createPost = async (req, res) => {
 
         const post = await Post.create({
             title,
+            summary,
             content_markdown: content,
             content_html: cleanHtml,
             slug,

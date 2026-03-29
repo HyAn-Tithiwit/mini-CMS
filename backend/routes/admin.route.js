@@ -3,13 +3,14 @@ const controller = require("../controllers/admin.controller");
 const { verifyToken } = require("../middlewares/auth.middleware");
 const { allowRoles } = require("../middlewares/rbac.middleware");
 
-router.get("/users", verifyToken, allowRoles("admin"), controller.getUsers); //done
-router.get("/users/:id", verifyToken, allowRoles("admin"), controller.getUserById); //done
-router.post("/users", verifyToken, allowRoles("admin"), controller.createUser); //done
-router.put("/users/:id", verifyToken, allowRoles("admin"), controller.updateUser); //done
-router.delete("/users/:id", verifyToken, allowRoles("admin"), controller.deleteUser); //done
+router.get("/statistics", verifyToken, allowRoles("admin"), controller.getStatistics);
 
-router.put("/users/:id/role", verifyToken, allowRoles("admin"), controller.updateRole); //đã sửa tí test lại
-router.put("/users/:id/status", verifyToken, allowRoles("admin"), controller.updateStatus); // have error
+router.get("/users", verifyToken, allowRoles("admin"), controller.getUsers);
+router.get("/users/:id", verifyToken, allowRoles("admin"), controller.getUserById);
+router.post("/users", verifyToken, allowRoles("admin"), controller.createUser);
+router.put("/users/:id", verifyToken, allowRoles("admin"), controller.updateUser);
+router.delete("/users/:id", verifyToken, allowRoles("admin"), controller.deleteUser);
+router.put("/users/:id/role", verifyToken, allowRoles("admin"), controller.updateRole);
+router.put("/users/:id/status", verifyToken, allowRoles("admin"), controller.updateStatus);
 
 module.exports = router;

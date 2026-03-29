@@ -3,124 +3,74 @@ import { Link } from 'react-router-dom';
 import { postApi } from '../../api/post.api';
 
 export default function Home() {
-  // 1. Quản lý các trạng thái của trang
-  const [posts, setPosts] = useState([]); // Lưu danh sách bài viết
-  const [loading, setLoading] = useState(true); // Trạng thái đang tải dữ liệu
-  const [error, setError] = useState(''); // Lưu thông báo lỗi nếu có
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 2. Tự động gọi API lấy bài viết ngay khi trang vừa load xong
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchPublishedPosts = async () => {
       try {
         setLoading(true);
-        // Gọi API lấy danh sách bài viết từ file post.api.js
-        const response = await postApi.getPosts(); 
+        const res = await postApi.getPosts();
+        const allPosts = res.data || [];
+
+        // 🛡️ FRONTEND FILTER: Chặn đứng bản nháp, chỉ cho phép bài 'published' lên trang chủ
+        const publishedPosts = allPosts.filter(post => post.status === 'published');
         
-        // LƯU Ý: Tuỳ thuộc vào backend của bạn trả về cấu trúc thế nào.
-        // Ví dụ: response.data, response.posts, hoặc trả thẳng mảng response
-        // Ở đây mình giả sử backend trả về một mảng chứa các bài viết
-        const postList = response.data || response.posts || response || []; 
-        setPosts(postList);
-        
-      } catch (err) {
-        setError('Không thể tải danh sách bài viết. Vui lòng thử lại sau!');
-        console.error("Lỗi lấy bài viết:", err);
+        setPosts(publishedPosts);
+      } catch (error) {
+        console.error('Lỗi lấy danh sách trang chủ:', error);
       } finally {
-        setLoading(false); // Dù lỗi hay thành công cũng phải tắt trạng thái loading
+        setLoading(false);
       }
     };
 
-    fetchPosts();
-  }, []); // Mảng rỗng [] nghĩa là chỉ chạy 1 lần duy nhất khi mở trang
+    fetchPublishedPosts();
+  }, []);
 
-  // 3. Giao diện hiển thị khi đang tải hoặc bị lỗi
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px', fontSize: '18px', color: '#666' }}>
-        Đang tải các bài viết mới nhất... ⏳
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>
-        <h3>Oops!</h3>
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  // 4. Giao diện chính: Hiển thị danh sách bài viết
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
-      {/* Banner / Tiêu đề trang */}
-      <div style={{ textAlign: 'center', padding: '40px 0', borderBottom: '2px solid #eee', marginBottom: '30px' }}>
-        <h1 style={{ fontSize: '36px', color: '#333', marginBottom: '10px' }}>📰 Tin Tức & Blog Mới Nhất</h1>
-        <p style={{ color: '#666', fontSize: '18px' }}>Cập nhật những thông tin và góc nhìn thú vị mỗi ngày</p>
+    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px' }}>
+      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <h1 style={{ fontSize: '36px', color: '#333', marginBottom: '10px' }}>📰 Tin tức & Bài viết mới nhất</h1>
+        <p style={{ color: '#666', fontSize: '16px' }}>Cập nhật những thông tin và kiến thức bổ ích mỗi ngày.</p>
       </div>
 
-      {/* Danh sách bài viết */}
-      {posts.length === 0 ? (
-        <div style={{ textAlign: 'center', color: '#888' }}>
-          Chưa có bài viết nào được đăng tải.
-        </div>
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '50px' }}>Đang tải bài viết... ⏳</div>
       ) : (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-          gap: '20px' 
-        }}>
-          {posts.map((post) => (
-            <div key={post._id} style={{ 
-              border: '1px solid #ddd', 
-              borderRadius: '8px', 
-              padding: '20px',
-              backgroundColor: '#fff',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-              display: 'flex',
-              flexDirection: 'column'
-            }}>
-              {/* Giả sử bài viết có ảnh thumbnail, nếu không có thì bỏ qua phần img này */}
-              {post.thumbnail && (
-                <img 
-                  src={post.thumbnail} 
-                  alt={post.title} 
-                  style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '4px', marginBottom: '15px' }}
-                />
-              )}
-              
-              <h3 style={{ fontSize: '20px', margin: '0 0 10px 0', color: '#007BFF' }}>
-                <Link to={`/post/${post._id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  {post.title}
-                </Link>
-              </h3>
-              
-              {/* Hiển thị một đoạn ngắn của nội dung (excerpt) */}
-              <p style={{ color: '#555', flexGrow: 1, lineHeight: '1.5' }}>
-                {post.summary || (post.content ? post.content.substring(0, 100) + '...' : 'Đang cập nhật nội dung...')}
-              </p>
-              
-              <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', color: '#888' }}>
-                <span>✍️ {post.author?.username || 'Ẩn danh'}</span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '30px' }}>
+          {posts.length === 0 ? (
+            <p style={{ textAlign: 'center', gridColumn: '1 / -1', color: '#888' }}>Hiện chưa có bài viết nào được xuất bản.</p>
+          ) : (
+            posts.map(post => (
+              <div key={post._id} style={{ backgroundColor: '#fff', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'transform 0.3s' }}>
+                {/* Ảnh bìa */}
+                <div style={{ height: '200px', backgroundColor: '#e9ecef' }}>
+                  {post.image ? (
+                    <img src={post.image} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#aaa' }}>Không có ảnh</div>
+                  )}
+                </div>
                 
-                {/* Nút Đọc tiếp */}
-                <Link 
-                  to={`/post/${post._id}`} 
-                  style={{ 
-                    padding: '8px 12px', 
-                    backgroundColor: '#007BFF', 
-                    color: '#fff', 
-                    textDecoration: 'none', 
-                    borderRadius: '4px',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Đọc tiếp →
-                </Link>
+                {/* Nội dung Card */}
+                <div style={{ padding: '20px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#007bff', textTransform: 'uppercase' }}>
+                    {post.category?.name || 'Tin tức'}
+                  </span>
+                  <h3 style={{ margin: '10px 0', fontSize: '20px', lineHeight: '1.4' }}>
+                    <Link to={`/post/${post._id}`} style={{ color: '#333', textDecoration: 'none' }}>{post.title}</Link>
+                  </h3>
+                  <p style={{ color: '#666', fontSize: '14px', lineHeight: '1.6', marginBottom: '20px', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {post.summary}
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+                    <span style={{ fontSize: '13px', color: '#888', fontWeight: 'bold' }}>✍️ {post.author?.username || 'Ẩn danh'}</span>
+                    <Link to={`/post/${post._id}`} style={{ fontSize: '13px', color: '#007bff', textDecoration: 'none', fontWeight: 'bold' }}>Đọc tiếp ➜</Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

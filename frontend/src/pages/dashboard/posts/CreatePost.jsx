@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { postApi } from '../../../api/post.api';
-import { taxonomyApi } from '../../../api/taxonomy.api'; // Lấy API Taxonomy
+import { taxonomyApi } from '../../../api/taxonomy.api'; 
 import { useAuth } from '../../../context/AuthContext';
 
 export default function CreatePost() {
@@ -10,31 +10,27 @@ export default function CreatePost() {
   const isEditMode = Boolean(id);
   const { user } = useAuth(); 
 
-  // 1. Quản lý dữ liệu form (Sửa tags thành mảng rỗng thay vì chuỗi)
+  // 1. Đã gỡ bỏ trường "slug" khỏi formData
   const [formData, setFormData] = useState({
     title: '',
-    slug: '', 
     summary: '',
     content: '',
     category: '', 
-    tags: [] // Dùng mảng để lưu danh sách ID của các Tag được tick
+    tags: []
   });
   
   const [imageFile, setImageFile] = useState(null); 
   const [imagePreview, setImagePreview] = useState(''); 
 
-  // State lưu danh sách Category và Tag lấy từ Backend
   const [categoriesList, setCategoriesList] = useState([]);
   const [tagsList, setTagsList] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
-  // 2. Tải dữ liệu khi vừa vào trang (Bao gồm Categories, Tags và Dữ liệu bài cũ nếu đang sửa)
   useEffect(() => {
     const initData = async () => {
       try {
-        // Tải danh sách Danh mục và Thẻ từ Database
         const [catRes, tagRes] = await Promise.all([
           taxonomyApi.getCategories(),
           taxonomyApi.getTags()
@@ -43,18 +39,30 @@ export default function CreatePost() {
         setCategoriesList(catRes.data || []);
         setTagsList(tagRes.data || []);
 
-        // Nếu đang ở chế độ Sửa, tải thêm dữ liệu bài viết
         if (isEditMode) {
           const response = await postApi.getDetailPost(id);
           const postData = response.data || response;
           
+          let markdownContent = postData.content_markdown || postData.content;
+          if (!markdownContent) {
+            try {
+              const listRes = await postApi.getPosts({ limit: 100 });
+              const allPosts = listRes.data || [];
+              const fullPost = allPosts.find(p => p._id === id);
+              if (fullPost) {
+                markdownContent = fullPost.content_markdown || fullPost.content_html || fullPost.content;
+              }
+            } catch (e) {
+              console.error("Không mót được dữ liệu", e);
+            }
+          }
+
           setFormData({
             title: postData.title || '',
-            slug: postData.slug || '',
             summary: postData.summary || '',
-            content: postData.content || '',
-            category: postData.category || '',
-            tags: postData.tags || [] // Backend trả về mảng ID tags
+            content: markdownContent || '', 
+            category: postData.category?._id || postData.category || '',
+            tags: postData.tags?.map(t => t._id || t) || [] 
           });
           setImagePreview(postData.image || postData.thumbnail || '');
         }
@@ -69,7 +77,6 @@ export default function CreatePost() {
     initData();
   }, [id, isEditMode]);
 
-  // 3. Xử lý nhập liệu text và select
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -77,21 +84,17 @@ export default function CreatePost() {
     });
   };
 
-  // 4. Xử lý khi tick/bỏ tick các Thẻ (Tags)
   const handleTagChange = (tagId) => {
     setFormData((prev) => {
       const isSelected = prev.tags.includes(tagId);
       if (isSelected) {
-        // Nếu đã tick rồi thì bỏ ra khỏi mảng
         return { ...prev, tags: prev.tags.filter(id => id !== tagId) };
       } else {
-        // Nếu chưa tick thì thêm vào mảng
         return { ...prev, tags: [...prev.tags, tagId] };
       }
     });
   };
 
-  // 5. Xử lý ảnh
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -100,16 +103,13 @@ export default function CreatePost() {
     }
   };
 
-  // 6. Gửi dữ liệu
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🛡️ BƯỚC BẢO VỆ 1: Kiểm tra bắt buộc phải có dữ liệu trước khi gọi API
     if (!formData.title.trim()) return alert("Vui lòng nhập tiêu đề bài viết!");
     if (!formData.content.trim()) return alert("Vui lòng nhập nội dung chi tiết!");
     if (!formData.category) return alert("Vui lòng chọn danh mục (Category)!");
 
-    // 🛡️ BƯỚC BẢO VỆ 2: Đảm bảo lấy được ID của Admin/Author
     const authorId = user?._id || user?.userId || user?.id; 
     if (!authorId) {
         alert("Lỗi: Không tìm thấy ID tác giả. Vui lòng F5 hoặc đăng nhập lại!");
@@ -122,19 +122,21 @@ export default function CreatePost() {
       const submitData = new FormData();
       
       submitData.append('title', formData.title);
-      if(formData.slug) submitData.append('slug', formData.slug);
       submitData.append('summary', formData.summary);
       submitData.append('content', formData.content);
       submitData.append('category', formData.category);
       submitData.append('author', authorId);
 
-      // Gửi mảng tags lên Backend
       if (formData.tags && formData.tags.length > 0) {
         formData.tags.forEach(tagId => submitData.append('tags', tagId));
       }
 
+      // ⚠️ GHI CHÚ QUAN TRỌNG VỀ UPLOAD ẢNH:
+      // Frontend đang gửi file ảnh dưới tên biến là 'image'
+      // Nếu Backend của bạn khai báo multer là upload.single('file') hoặc upload.single('thumbnail')
+      // thì bạn PHẢI sửa chữ 'image' màu đỏ bên dưới thành 'file' hoặc 'thumbnail' cho khớp nhé.
       if (imageFile) {
-        submitData.append('image', imageFile);
+        submitData.append('image', imageFile); 
       }
 
       if (isEditMode) {
@@ -169,23 +171,14 @@ export default function CreatePost() {
 
       <form onSubmit={handleSubmit} encType="multipart/form-data">
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-          <div>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Tiêu đề <span style={{color: 'red'}}>*</span></label>
-            <input 
-              type="text" name="title" value={formData.title} onChange={handleChange} required 
-              placeholder="Nhập tiêu đề hấp dẫn..."
-              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Slug (URL thân thiện SEO)</label>
-            <input 
-              type="text" name="slug" value={formData.slug} onChange={handleChange} 
-              placeholder="bai-viet-moi"
-              style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
-            />
-          </div>
+        {/* Đã gỡ bỏ ô Slug, mở rộng ô Tiêu đề ra 100% */}
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Tiêu đề <span style={{color: 'red'}}>*</span></label>
+          <input 
+            type="text" name="title" value={formData.title} onChange={handleChange} required 
+            placeholder="Nhập tiêu đề hấp dẫn..."
+            style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box' }}
+          />
         </div>
 
         <div style={{ marginBottom: '20px' }}>
@@ -204,13 +197,12 @@ export default function CreatePost() {
           />
         </div>
 
-        {/* --- KHU VỰC CHỌN DANH MỤC & THẺ GIAO DIỆN TRỰC QUAN --- */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px', backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e9ecef' }}>
           
           <div>
             <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Ảnh bìa (Thumbnail)</label>
             <input 
-              type="file" accept="image/*" onChange={handleImageChange} 
+              type="file" accept="image/*" name="image" onChange={handleImageChange} 
               style={{ width: '100%', padding: '10px', border: '1px solid #ccc', borderRadius: '4px', boxSizing: 'border-box', backgroundColor: '#fff', marginBottom: '15px' }}
             />
             {imagePreview && (
@@ -221,7 +213,6 @@ export default function CreatePost() {
           </div>
 
           <div>
-            {/* DROPDOWN CHỌN DANH MỤC */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Danh mục (Category) <span style={{color: 'red'}}>*</span></label>
               <select 
@@ -238,7 +229,6 @@ export default function CreatePost() {
               </select>
             </div>
 
-            {/* CHECKBOX CHỌN NHIỀU THẺ */}
             <div>
               <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '8px' }}>Thẻ (Tags)</label>
               <div style={{ padding: '15px', backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '4px', maxHeight: '150px', overflowY: 'auto' }}>
@@ -270,7 +260,7 @@ export default function CreatePost() {
           <button 
             type="submit" disabled={loading}
             style={{ padding: '12px 24px', backgroundColor: loading ? '#6c757d' : '#007BFF', color: '#fff', border: 'none', borderRadius: '4px', cursor: loading ? 'not-allowed' : 'pointer', fontWeight: 'bold', fontSize: '16px' }}>
-            {loading ? 'Đang xử lý...' : isEditMode ? '💾 Cập nhật bài viết' : '🚀 Đăng bài viết'}
+            {loading ? 'Đang xử lý...' : isEditMode ? '💾 Cập nhật bài viết' : '💾 Lưu bài (Bản nháp)'}
           </button>
         </div>
 
