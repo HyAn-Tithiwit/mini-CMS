@@ -103,6 +103,19 @@ export default function CreatePost() {
   // 6. Gửi dữ liệu
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // 🛡️ BƯỚC BẢO VỆ 1: Kiểm tra bắt buộc phải có dữ liệu trước khi gọi API
+    if (!formData.title.trim()) return alert("Vui lòng nhập tiêu đề bài viết!");
+    if (!formData.content.trim()) return alert("Vui lòng nhập nội dung chi tiết!");
+    if (!formData.category) return alert("Vui lòng chọn danh mục (Category)!");
+
+    // 🛡️ BƯỚC BẢO VỆ 2: Đảm bảo lấy được ID của Admin/Author
+    const authorId = user?._id || user?.userId || user?.id; 
+    if (!authorId) {
+        alert("Lỗi: Không tìm thấy ID tác giả. Vui lòng F5 hoặc đăng nhập lại!");
+        return;
+    }
+
     setLoading(true);
 
     try {
@@ -113,14 +126,16 @@ export default function CreatePost() {
       submitData.append('summary', formData.summary);
       submitData.append('content', formData.content);
       submitData.append('category', formData.category);
-      
-      const authorId = user._id || user.id; 
-      if (authorId) submitData.append('author', authorId);
+      submitData.append('author', authorId);
 
-      // Gửi mảng tags lên Backend (append từng tagId một)
-      formData.tags.forEach(tagId => submitData.append('tags', tagId));
+      // Gửi mảng tags lên Backend
+      if (formData.tags && formData.tags.length > 0) {
+        formData.tags.forEach(tagId => submitData.append('tags', tagId));
+      }
 
-      if (imageFile) submitData.append('image', imageFile);
+      if (imageFile) {
+        submitData.append('image', imageFile);
+      }
 
       if (isEditMode) {
         await postApi.updatePost(id, submitData);

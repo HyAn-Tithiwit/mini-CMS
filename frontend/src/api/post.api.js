@@ -9,22 +9,15 @@ export const postApi = {
   searchByTag: (tagSlug) => axiosClient.get(`/posts/tag/${tagSlug}`),
 
   // --- AUTHOR/ADMIN ---
-  // SỬA Ở ĐÂY: Thêm header multipart/form-data để Backend nhận được file ảnh
-  createPostByAuthor: (data) => axiosClient.post('/posts', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }), 
-  createPostByAdmin: (data) => axiosClient.post('/posts', data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }), 
-  updatePost: (id, data) => axiosClient.put(`/posts/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }),
+  // SỬA Ở ĐÂY: Bỏ ép cứng headers. Để Axios tự động sinh boundary cho file upload
+  createPostByAuthor: (data) => axiosClient.post('/posts', data), 
+  createPostByAdmin: (data) => axiosClient.post('/posts', data), 
+  updatePost: (id, data) => axiosClient.put(`/posts/${id}`, data),
   deletePost: (id) => axiosClient.delete(`/posts/${id}`),
-  
 
-  // --- CÁC TÍNH NĂNG CHỜ BACKEND BỔ SUNG ---
-  submitToReview: (id) => axiosClient.put(`/posts/${id}`), 
-  getPostsWithReviewStatus: () => axiosClient.get('/posts'),
-  publishPost: (id) => axiosClient.put(`/posts/${id}`),
-  rejectPost: (id) => axiosClient.put(`/posts/${id}`),
+  // --- EDITOR ROLE ---
+  getEditorPosts: () => axiosClient.get('/editor'), 
+  getEditorPostDetail: (id) => axiosClient.get(`/editor/${id}`),
+  approvePost: (id) => axiosClient.put(`/editor/approve/${id}`),
+  rejectPost: (id) => axiosClient.put(`/editor/reject/${id}`),
 };

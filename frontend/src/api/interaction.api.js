@@ -1,18 +1,16 @@
 import axiosClient from './axiosClient';
 
 export const interactionApi = {
-  // --- COMMENTS ---
-  getCommentsInPost: (postId) => axiosClient.get(`/comments/get-comments-in-post/${postId}`),
-  createComment: (data) => axiosClient.post('/comments/create-comment', data),
-  updateComment: (id, data) => axiosClient.put(`/comments/update-comment/${id}`, data),
-  deleteComment: (id) => axiosClient.delete(`/comments/delete-comment/${id}`),
+  // --- BÌNH LUẬN (Đã sửa thành /comment số ít) ---
+  getCommentsByPost: (postId) => axiosClient.get(`/comment/${postId}`),
+  addComment: (postId, data) => axiosClient.post(`/comment/${postId}`, data),
+  deleteComment: (commentId) => axiosClient.delete(`/comment/${commentId}`),
 
-  // --- REACTIONS ---
-  createReact: (data) => axiosClient.post('/reactions/create-react', data),
-  deleteReact: (id) => axiosClient.delete(`/reactions/delete-reaction/${id}`),
+  // --- TƯƠNG TÁC LIKE/DISLIKE ---
+  getReactions: (postId) => axiosClient.get(`/reaction/${postId}`),
+  reactToPost: (data) => axiosClient.post(`/reaction`, data),
 
-  // --- BOOKMARKS ---
-  saveBookmark: (postId) => axiosClient.post(`/bookmarks/Save-bookmark/${postId}`),
-  deleteBookmark: (id) => axiosClient.delete(`/bookmarks/delete-bookmark/${id}`),
-  viewBookmarked: () => axiosClient.get('/bookmarks/view-bookmarked'),
+  // --- LƯU TRỮ (BOOKMARK) ---
+  getBookmarks: () => axiosClient.get(`/bookmark`),
+  toggleBookmark: (postId) => axiosClient.post(`/bookmark/toggle/${postId}`),
 };

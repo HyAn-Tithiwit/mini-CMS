@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom'; // <-- Đã thêm Outlet vào đây
 import { AuthProvider } from './context/AuthContext';
+import ArticleDetail from './pages/public/ArticleDetail';
 
 // Components & Layouts
 import Header from './components/Header';
@@ -11,7 +12,6 @@ import PrivateRoute from './routes/PrivateRoute';
 // Public Pages
 import Home from './pages/public/Home';
 import CategoryPublic from './pages/public/Category'; // Đổi tên import để tránh trùng với Category của Admin
-import ArticleDetail from './pages/public/ArticleDetail';
 import Search from './pages/public/Search'; // <-- THÊM IMPORT SEARCH
 
 // Auth Pages & Profile
@@ -44,6 +44,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/search" element={<Search />} /> {/* <-- ĐÃ CẬP NHẬT TRANG TÌM KIẾM */}
+              <Route path="/post/:id" element={<ArticleDetail />} />
             </Route>
 
             {/* 2. DASHBOARD ROUTES (Private & Admin Layout) */}
