@@ -9,7 +9,7 @@ router.post("/users", verifyToken, allowRoles("admin"), controller.createUser); 
 router.put("/users/:id", verifyToken, allowRoles("admin"), controller.updateUser); //done
 router.delete("/users/:id", verifyToken, allowRoles("admin"), controller.deleteUser); //done
 
-router.patch("/users/:id/role", verifyToken, allowRoles("admin"), controller.updateRole);
-router.patch("/users/:id/status", verifyToken, allowRoles("admin"), controller.updateStatus); // have error
+router.put("/users/:id/role", verifyToken, allowRoles("admin"), controller.updateRole); //đã sửa tí test lại
+router.put("/users/:id/status", verifyToken, allowRoles("admin"), controller.updateStatus); // have error
 
 module.exports = router;

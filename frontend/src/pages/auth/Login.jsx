@@ -27,20 +27,12 @@ export default function Login() {
     setError('');
 
     try {
-      // Gọi hàm login (nó sẽ tự xử lý việc lấy token và fetch user)
-      const userData = await login(formData.email, formData.password);
-      
-      // Soi Role từ Backend để điều hướng
-      const actualRole = userData?.role || 'reader'; 
+      await login(formData.email, formData.password);
       
       alert('Đăng nhập thành công!');
       
-      // Điều hướng thông minh
-      if (['admin', 'editor', 'author'].includes(actualRole)) {
-        navigate('/dashboard/posts'); // Cấp quản lý/tác giả vào Dashboard
-      } else {
-        navigate('/'); // Độc giả ra trang chủ
-      }
+      // CHỈNH SỬA Ở ĐÂY: Dù là ai cũng về Trang chủ (Home)
+      navigate('/');
       
     } catch (err) {
       setError(err.response?.data?.message || 'Sai email hoặc mật khẩu!');

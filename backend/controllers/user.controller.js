@@ -19,16 +19,16 @@ exports.getProfile = async (req, res) => {
 
 // Đổi lại thành update profile
 exports.updateProfile = async (req, res) => {
-  const { status } = req.body;
+  const { username, email } = req.body;
 
   const user = await User.findByIdAndUpdate(
     req.user.userId,
-    { status },
+    { username, email },
     { new: true }
   );
 
   res.status(201).json({
-    message: "Update status successfully",
+    message: "Update profile successfully",
     data: user
   });
 };

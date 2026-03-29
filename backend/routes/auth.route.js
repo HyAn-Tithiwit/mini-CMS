@@ -7,8 +7,8 @@ const { allowRoles } = require("../middlewares/rbac.middleware");
 
 router.post("/register", registerValidator, validate, controller.register);
 router.post("/login", loginValidator, validate, controller.login);
-router.post("/refresh-token", allowRoles("reader", "author", "editor", "admin"), controller.refreshToken);
-router.post("/logout", allowRoles("reader", "author", "editor", "admin"), controller.logout);
+router.post("/refresh-token", controller.refreshToken);
+router.post("/logout", controller.logout);
 router.post("/forgot-password", controller.forgotPassword); // chưa test
 router.post("/reset-password", controller.resetPassword); // chưa test
 

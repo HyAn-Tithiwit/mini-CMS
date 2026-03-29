@@ -1,6 +1,22 @@
 const Tag = require("../models/Tag.model");
 const GenerateSlug = require("../utils/generate-slug");
 
+exports.getAllTags = async (_req, res) => {
+    try {
+        const tags = await Tag.find();
+
+        res.status(200).json({
+            message: "Get all tags successfully",
+            data: tags
+        });
+    } catch(error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
+    }
+}
+
 // Tạo Tag
 exports.createTag = async (req, res) => {
     try {
@@ -11,7 +27,7 @@ exports.createTag = async (req, res) => {
         } else {
             res.status(500).json({
                 message: "Generate slug error"
-            })
+            });
         }
 
         const tag = await Tag.create({
@@ -27,7 +43,7 @@ exports.createTag = async (req, res) => {
         console.log(error);
         return res.status(500).json({
             message: "Internal server error"
-        })
+        });
     }
 }
 

@@ -1,6 +1,23 @@
 const Category = require("../models/Category.model");
 const GenerateSlug = require("../utils/generate-slug");
 
+// Lấy toàn bộ category
+exports.getCateogories = async (_req, res) => {
+    try {
+        const categories = await Category.find();
+
+        res.status(200).json({
+            message: "Get all categories succsessfully",
+            data: categories
+        })
+    } catch(error) {
+        console.log(error);
+        res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+}
+
 // Tạo category
 exports.createCategory = async (req, res) => {
     try {
